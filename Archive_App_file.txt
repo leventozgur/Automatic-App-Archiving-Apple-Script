@@ -1,0 +1,132 @@
+-- Timers
+set startTime to current date
+set currentTime to time string of (current date)
+set AppleScript's text item delimiters to ":"
+set hourMinute to text items 1 through 2 of currentTime
+set AppleScript's text item delimiters to "."
+set formattedTime to hourMinute as string
+set AppleScript's text item delimiters to ""
+
+-- Control Veriables
+set archiveFinished to false
+set isRunning to true
+
+-- VerisonNumber ve BuildNumber Giriş Dialog Ekranı
+set marketingVersionNumber to text returned of (display dialog "Version number:" default answer "")
+set versionNumber to text returned of (display dialog "Build number:" default answer "")
+
+-- Branch Seçim Dialog Ekranı
+set branchDialog to "Branch Seçiniz!"
+set uatBranchBtn to "uat"
+set devBranchBtn to "dev"
+display dialog branchDialog buttons {uatBranchBtn, devBranchBtn}
+set appBranch to button returned of result
+
+-- Scheme Seçim Dialog Ekranı
+set schemeDialog to "Scheme Seçiniz!"
+set uatBtn to "UAT"
+set pilotBtn to "Pilot"
+set storeBtn to "Store"
+display dialog schemeDialog buttons {uatBtn, pilotBtn, storeBtn}
+set appScheme to button returned of result
+
+-- Archive Veriables
+set archiveName to appBranch & "_" & appScheme & "_" & marketingVersionNumber & "_" & versionNumber
+set archiveFullName to archiveName & ".xcarchive"
+
+-- Folder Paths 
+set downloadFolder to "~/Downloads/"
+set projectFolder to downloadFolder & "tempApp/App/"
+set packageResolved to projectFolder & "App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+set archiveWillExportPath to projectFolder & archiveFullName
+set archiveFinishedPath to downloadFolder & archiveFullName
+set derivedDataPath to "~/Library/Developer/Xcode/DerivedData/"
+
+-- git Veriables
+set AppURL to "project git url"
+set PRbranchName to "ArchiveBranches/" & archiveName & "_" & formattedTime
+
+tell application "Terminal"
+	do script ""
+	activate
+	
+	delay 1
+	do script "rm -rf " & derivedDataPath in window 1
+	do script "rm -rf " & downloadFolder & "tempApp" in window 1
+	
+	-- Terminalin açılması için 0.5 sn delay var
+	-- Downloads folder'ına gidip, tempApp folder'ını yaratır ve açar.
+	delay 3
+	do script "cd " & downloadFolder in window 1
+	do script "mkdir tempApp" in window 1
+	do script "cd tempApp/" in window 1
+	
+	-- tempApp folder'ı yaratılana kadar 1 sn delay ekleyerek bekler.
+	-- tempApp folder'ı yaratıldıktan sonra, Clone işlemi başlar. 
+	-- Clone işleminden sonra istenilen branch'de olduğundan emin olmak için checkout işlemi yapılır.
+	repeat until (do shell script "if [ -e " & downloadFolder & "tempApp ]; then echo \"true\"; else echo \"false\"; fi") is equal to "true"
+		delay 1
+	end repeat
+	do script "git clone -b " & appBranch & " " & AppURL in window 1
+	do script "cd App/" in window 1
+	
+	delay 20
+	do script "rm -rf " & packageResolved in window 1
+	
+	-- Package Resolve ve Package Update çalıştırılır.
+	-- version ve build numarası atanır.
+	-- archive alma işlemi başlatılır.
+	delay 5
+	do script "xcodebuild -resolvePackageDependencies" in window 1
+	
+	repeat while isRunning
+		delay 1
+		set output to do shell script "ps -ax | grep xcodebuild"
+		if output does not contain "xcodebuild -resolvePackageDependencies" then
+			set isRunning to false
+		end if
+	end repeat
+	
+	do script "xcrun agvtool new-version -all " & versionNumber in window 1
+	do script "sed -i '' -e 's/MARKETING_VERSION \\= [^\\;]*\\;/MARKETING_VERSION \\= " & marketingVersionNumber & "\\;/' App.xcodeproj/project.pbxproj" in window 1
+	do script "xcodebuild -project App.xcodeproj -scheme " & appScheme & " -configuration Release -destination 'generic/platform=iOS' archive -archivePath " & archiveFullName in window 1
+	
+	
+	-- Archive işleminin bitmiş olduğunu, terminal üzerindeki "ARCHIVE SUCCEEDED" ve "ARCHIVE FAILED" kelimelerini kontrol ederek anlar.
+	-- "SUCCEEDED" olduğu zaman, oluşturulan archive dosyasını App klasörü içerisinden download klasörü içerisine taşır.
+	-- Yapılan değişiklikleri (packageResolve, versionNumber, MarketingVersionNumber) yeni bir sub branch açarak commit ve push işlemlerini yapar.  
+	-- tempApp klasörünü siler.
+	-- Başarılı texti ve toplan çalışma süresini diloag olarak ekrana bastırır.
+	repeat until (archiveFinished)
+		set myText to ""
+		repeat with i from 1 to count windows
+			set windowContents to the contents of every tab of window i as string
+			set myText to myText & windowContents
+		end repeat
+		
+		if myText contains "ARCHIVE SUCCEEDED" then
+			set archiveFinished to true
+			do script "mv " & archiveWillExportPath & " " & downloadFolder in window 1
+			do script "git checkout -b " & PRbranchName in window 1
+			do script "git add ." in window 1
+			do script "git commit -m 'archive files'" in window 1
+			do script "git push -u origin " & PRbranchName in window 1
+			
+			delay 10
+			do script "rm -rf " & downloadFolder & "tempApp" in window 1
+			
+			-- Toplam Çalışma zamanı
+			set endTime to current date
+			set timeDiff to (endTime - startTime) as integer
+			set minutesDiff to (timeDiff div 60) as integer
+			set secondsDiff to (timeDiff mod 60) as integer
+			display notification "Archive işlemi Tamamlandı. Script çalışma süresi: " & minutesDiff & " dk, " & secondsDiff & " saniye."
+			
+			do script "open " & archiveFinishedPath in window 1
+			
+		else if myText contains "ARCHIVE FAILED" then
+			set archiveFinished to true
+			display notification "Archive failed!"
+		end if
+	end repeat
+end tell
