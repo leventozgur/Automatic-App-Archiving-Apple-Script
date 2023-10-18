@@ -34,11 +34,11 @@ This project contains an AppleScript script designed to automatically archive Xc
 ## Screenshots
 
 <table>
-<tr><img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/main/Screenshots/ss_01.png" alt="ss_01" width="400" style="border: 1px solid;"> </tr>
-<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/main/Screenshots/ss_02.png" alt="ss_02" width="400" style="border: 1px solid;"> </tr>
-<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/main/Screenshots/ss_03.png" alt="ss_03" width="400" style="border: 1px solid;"> </tr>
-<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/main/Screenshots/ss_04.png" alt="ss_04" width="400" style="border: 1px solid;"> </tr>
-<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/main/Screenshots/ss_05.png" alt="ss_05" width="400" style="border: 1px solid;"> </tr>
+<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/master/Screenshots/ss_01.png" alt="ss_01" width="400" style="border: 1px solid;"> </tr>
+<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/master/Screenshots/ss_02.png" alt="ss_02" width="400" style="border: 1px solid;"> </tr>
+<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/master/Screenshots/ss_03.png" alt="ss_03" width="400" style="border: 1px solid;"> </tr>
+<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/master/Screenshots/ss_04.png" alt="ss_04" width="400" style="border: 1px solid;"> </tr>
+<tr> <img src="https://raw.githubusercontent.com/leventozgur/Automatic-App-Archiving-Apple-Script/master/Screenshots/ss_05.png" alt="ss_05" width="400" style="border: 1px solid;"> </tr>
 </table>
 
 ## Requirements
